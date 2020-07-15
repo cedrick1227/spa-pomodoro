@@ -179,7 +179,6 @@ class App{
                 let parent = document.getElementById('list');
                 let setting = document.getElementById('setting');
                 parent.addEventListener('click', (e)=>{
-                    console.log(parent.querySelector('.hasForm'));
                     if (setting.classList.contains('setting-close')){
                         if (!parent.querySelector('.hasForm')){
                             radio({
@@ -188,7 +187,6 @@ class App{
                                 classes: {show:'open', hide:'close', exclude:'hasForm', active:'todo-active'},
                                 children: parent.querySelectorAll('li'),
                             });
-                        
                             if(e.target.parentElement.id == 'controls'){
                                 let obj = {
                                     id: e.target.id,
@@ -206,7 +204,6 @@ class App{
                 let closeInput = document.querySelector('.close__input');
                 if (closeInput){
                     closeInput.addEventListener('click', (e)=>{
-
                         handler({
                             value: closeInput.previousSibling.value,
                             row: getParent(closeInput.previousSibling, {type:'tag', selector:'LI'}),
@@ -236,10 +233,9 @@ class App{
                     setTimeout(()=>{obj.row.classList.remove('hasForm')}, 100);    
                 }else{
                     //remove element
-                    obj.row.remove();
                     obj.row.parentElement.setAttribute('name',"");
-                }
-                
+                    setTimeout(()=>{obj.row.remove()},100);
+                }                
             },
             addHandler:()=>{
                 this.view().closeInput(this.controller().closeInputHandler);
