@@ -453,7 +453,11 @@ class Timer{
                 this.view().renderControl('pause');
             },
             restartHandler:(obj)=>{
-                let duration = JSON.parse(localStorage.settings)['duration'];
+                let duration = 10;
+                if (localStorage.settings){
+                    duration = JSON.parse(localStorage.settings)['duration'];
+                }
+                 
                 let todoID = obj.id;
                 obj.min.textContent = duration;
                 obj.sec.textContent = '00';
