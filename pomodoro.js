@@ -327,9 +327,9 @@ class Timer{
                                 <p id='task-name' class='task_name'>${data.value}</p>
                             </div>
                             <div id=time class=time>
-                                <span id=minutes class=minutes>00</span>
+                                <span id=minutes class=minutes>${data.min}</span>
                                 <span>:</span>
-                                <span id=seconds class=seconds>05</span>
+                                <span id=seconds class=seconds>${data.sec}</span>
                             </div>
                             <div id='timer-controls' class='timer-controls'></div>
                         </div>
@@ -400,6 +400,20 @@ class Timer{
     controller(){
         return {
             render:(obj)=>{
+                let pulled = this.model().read().datas().filter(row=>{
+                    return obj.tr.id == row.id;
+                })[0];
+                if (localStorage.settings){
+                    obj.min = JSON.parse(localStorage.settings)['duration'];
+                } else {
+                    obj.min = 10;
+                }
+                obj.sec='00';
+                if ('config' in pulled){
+                    obj.min = pulled['config']['min'];
+                    obj.sec = pulled['config']['sec'];
+                }
+                
                 this.view().render(document.getElementById('main-container'), obj);
                 this.view().renderControl('pause');
                 this.controller().activateEvents();
@@ -439,9 +453,9 @@ class Timer{
                 this.view().renderControl('pause');
             },
             restartHandler:(obj)=>{
-                console.log(obj);
+                let duration = JSON.parse(localStorage.settings)['duration'];
                 let todoID = obj.id;
-                obj.min.textContent = '05';
+                obj.min.textContent = duration;
                 obj.sec.textContent = '00';
                 this.view().renderTimer(this.controller().renderTimerHandler);
                 this.view().renderControl('pause');
@@ -516,6 +530,7 @@ class Settings{
             structure:()=>{
                 return [
                     {id:'theme', display:'Theme', tag:'select', src:['red dragon', 'blue ocean', 'green ranger']},
+                    {id:'duration', display:'Duration', tag:"input", type:'number', value:25},
                 ]
             },
         }
@@ -527,7 +542,6 @@ class Settings{
                     e.preventDefault();
                     let container = document.querySelector('.sidebar__container');
                     if (container){
-                        let test = getParent(e.target, {type:'class', selector:'sidebar__container'});
                         toggler({
                             trigger: (e.target.id == 'setting'),
                             target:[
@@ -536,7 +550,6 @@ class Settings{
                             ],
                         })
                     } else {
-                        
                         if (e.target.id =='setting'){
                             handler();
                             setTimeout(()=>{
@@ -557,7 +570,9 @@ class Settings{
                                     ${createFormElement(item)}
                                 </li>`
                             }).join("")
+                            
                         }
+                        <input type='submit' value='submit' class='submit'></input>
                     </ul>
                 `;
                 document.querySelector('.sidebar__container').appendChild(toHTML(str));
@@ -570,9 +585,12 @@ class Settings{
                 `;
                 root.appendChild(toHTML(str));
             },
-            change:(handler)=>{
-                document.getElementById('theme').addEventListener('change', (e)=>{
-                    handler(document.getElementById('theme').value);
+            submit:(handler)=>{
+                document.querySelector('.setting__list .submit').addEventListener('click', (e)=>{
+                    handler({
+                        theme:document.getElementById('theme').value,
+                        duration: document.getElementById('duration').value,
+                    });
                 })
             },
         }
@@ -583,12 +601,15 @@ class Settings{
                 let data = this.model()._db().read().datas();
                 this.view().renderContainer(document.getElementById('main-container'));
                 this.view().renderSidebar(data);
-                this.view().change(this.controller().changeHandler);
+                this.view().submit(this.controller().submitHandler);
             },
-            changeHandler:(obj)=>{
-                localStorage.setItem('theme', JSON.stringify(obj));
-                obj = new Theme().model()[obj];
-                applyTheme(obj)
+            submitHandler:(obj)=>{
+                if (!obj.duration){
+                    obj.duration = 25;
+                }
+                localStorage.setItem('settings', JSON.stringify(obj));
+                obj = new Theme().model()[obj.theme];
+                applyTheme(obj);
             },
             listen:()=>{
                 this.view().clickSetting(this.controller().clickSettingHandler);
@@ -602,7 +623,7 @@ settings.controller().listen();
 const app = new App;
 app.controller().listen();
 
-if (localStorage.theme){
-    let theme = new Theme().model()[JSON.parse(localStorage.theme)];
+if (localStorage.settings){
+    let theme = new Theme().model()[JSON.parse(localStorage.settings)['theme']];
     applyTheme(theme);
 }
